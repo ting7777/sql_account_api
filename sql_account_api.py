@@ -5,8 +5,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import json
 
+# create COM server
 ComServer = win32com.client.Dispatch("SQLAcc.BizApp")
 
+# authentication
 def CheckLogin():
     B = ComServer.IsLogin
     if B == True:
@@ -17,9 +19,8 @@ def CheckLogin():
 
 CheckLogin()
 
+
 app = FastAPI()
-
-
 
 class Item(BaseModel):
     DOCKEY: Union[str, None] = None
@@ -81,74 +82,13 @@ class Item(BaseModel):
     TRANSFERABLE: Union[str, None] = None
     UPDATECOUNT: Union[str, None] = None
     PRINTCOUNT: Union[str, None] = None
-    # detailList: Union[Union[str, None], None] = None
-    # detailList: Set[dict] = set()
     detailList: list[dict] = []
 
 
 
-@app.get("/")
-def read_root():
-    # return {"Hello": "World"}
-    return "SQL Accounting API"
-
-
-
+# GET request to display the list of items
 @app.get("/{doctype_name}/getAll")
-# async def read_item(doctype_name: str, q: Union[str, None] = None):
 async def read_all_item(doctype_name: str):
-    
-    lSQL = f"SELECT * FROM {doctype_name}"
-    lDataSet = ComServer.DBManager.NewDataSet(lSQL)
-    # n = 0
-    aa = ""
-    aaa = ""
-    # tt = ""
-    lst = []
-
-    while not lDataSet.eof:
-        fc = lDataSet.Fields.Count
-        for x in range(fc-1):
-            fn = lDataSet.Fields.Items(x).FieldName
-            fv = lDataSet.FindField(fn).AsString
-            lresult = f'"{fn}": "{fv}"' + ','
-            # "Index : "+ str(x) + " FieldName : " + fn + " Value : " + fv
-            # print ("{" + lresult + "}")
-            aa = aa + lresult
-            # print(lresult)
-            # print("====")
-            # print(aa)
-            # print ("[" + lresult + "]")
-            # return lresult
-        fn = lDataSet.Fields.Items(fc-1).FieldName
-        fv = lDataSet.FindField(fn).AsString
-        lresult = f'"{fn}": "{fv}"'
-        aa = aa + lresult
-        # print("====")
-        # n = n+1
-        bb = "{" + aa + "}"
-        aaa = json.loads(bb)
-        lst.append(aaa)
-        lDataSet.Next()
-        aa = ""
-        # tt = tt + aaa
-        # print(aa)
-        # aaa = aaa + aaa
-        # aaaa = "[" + aaa + "]"
-        # aaaa = tt.split(';')
-        # aaa = "[" + aa + "]"
-    
-    # my = lDataSet.FindField("DocNo").AsString
-
-    # return {"doctype_name": my}
-    # return f"Done. {n} record"
-    # print(aaaa)
-    return lst
-
-
-
-@app.get("/{doctype_name}/getall")
-async def read_all_item(doctype_name: str):    
     lSQL = f"SELECT * FROM {doctype_name}"
     lDataSet = ComServer.DBManager.NewDataSet(lSQL)
     aa = ""
@@ -174,46 +114,32 @@ async def read_all_item(doctype_name: str):
 
 
 
+# POST request to create a new item
 @app.post("/{doctype_name}/add")
 async def create_item(doctype_name: str, data: Item):
     BizObject = ComServer.BizObjects.Find(f"{doctype_name}")
     lMain = BizObject.DataSets.Find("MainDataSet") #lMain contains master data
     lDetail = BizObject.DataSets.Find("cdsDocDetail") #lDetail contains detail data
-
-    # lDate = datetime.datetime.today()
-
     BizObject.New();
-    # lMain.FindField("DocKey").value = -1
     if data.DOCNO is not None:
         lMain.FindField("DocNo").AsString = f"{data.DOCNO}"
     if data.DOCDATE is not None:
         lDate = data.DOCDATE
         lMain.FindField("DocDate").value =  lDate.strftime('%m/%d/%Y')
-    # lMain.FindField("PostDate").value = data.POSTDATE
     if data.CODE is not None:
         lMain.FindField("Code").AsString = f"{data.CODE}"
     if data.COMPANYNAME is not None:
         lMain.FindField("CompanyName").AsString = data.COMPANYNAME
     if data.ADDRESS1 is not None:
         lMain.FindField("Address1").AsString = data.ADDRESS1
-    # lMain.FindField("Address2").AsString = data.ADDRESS2
-    # lMain.FindField("Address3").AsString = data.ADDRESS3
-    # lMain.FindField("Address4").AsString = data.ADDRESS4
-    # lMain.FindField("Phone1").AsString = data.PHONE1
     if data.DESCRIPTION is not None:
         lMain.FindField("Description").AsString = data.DESCRIPTION
 
     if data.detailList is not None:
         for child in data.detailList:
-
             lDetail.Append()
-            # lDetail.FindField("DtlKey").value = -1
-            # lDetail.FindField("DocKey").value = -1
-            # lDetail.FindField("Seq").value = 1
-            # lDetail.FindField("Account").AsString = "500-000" #Sales Account
             if child["ITEMCODE"] is not None:
                 lDetail.FindField("ItemCode").AsString = child["ITEMCODE"]
-            # lDetail.FindField("Account").AsString = "500-000"
             if child["DESCRIPTION"] is not None:
                 lDetail.FindField("Description").AsString = child["DESCRIPTION"]
             if child["QTY"] is not None:
@@ -239,25 +165,18 @@ async def create_item(doctype_name: str, data: Item):
             lDetail.Post()
     BizObject.Save()
     BizObject.Close()
-
     return "done"
 
 
 
+# PUT request to edit existing item
 @app.put("/{doctype_name}/edit")
 async def update_item(doctype_name:str, data: Item):
     BizObject = ComServer.BizObjects.Find(f"{doctype_name}")
     lMain = BizObject.DataSets.Find("MainDataSet")
     lDetail = BizObject.DataSets.Find("cdsDocDetail") #lDetail contains detail data
-
-    
-    # lDocKey = BizObject.FindKeyByRef("DocNo", "--IV Test--")
     lDocKey = BizObject.FindKeyByRef("DocNo", f"{data.DOCNO}")
-        
     if lDocKey is None:
-        # BizObject.New()
-        # lMain.FindField("CODE").value = "FAIRY"
-        # lMain.FindField("DESCRIPTION").value = "FAIRY TAIL"
         print ("Record Not Found")
     else:
         BizObject.Params.Find("DocKey").Value = lDocKey
@@ -273,24 +192,14 @@ async def update_item(doctype_name:str, data: Item):
             lMain.FindField("CompanyName").AsString = data.COMPANYNAME
         if data.ADDRESS1 is not None:
             lMain.FindField("Address1").AsString = data.ADDRESS1
-        # lMain.FindField("Address2").AsString = data.ADDRESS2
-        # lMain.FindField("Address3").AsString = data.ADDRESS3
-        # lMain.FindField("Address4").AsString = data.ADDRESS4
-        # lMain.FindField("Phone1").AsString = data.PHONE1
         if data.DESCRIPTION is not None:
             lMain.FindField("Description").AsString = data.DESCRIPTION
 
         if data.detailList is not None:
             for child in data.detailList:
-
                 lDetail.Append()
-                # lDetail.FindField("DtlKey").value = -1
-                # lDetail.FindField("DocKey").value = -1
-                # lDetail.FindField("Seq").value = 1
-                # lDetail.FindField("Account").AsString = "500-000" #Sales Account
                 if child["ITEMCODE"] is not None:
                     lDetail.FindField("ItemCode").AsString = child["ITEMCODE"]
-                # lDetail.FindField("Account").AsString = "500-000"
                 if child["DESCRIPTION"] is not None:
                     lDetail.FindField("Description").AsString = child["DESCRIPTION"]
                 if child["QTY"] is not None:
@@ -324,11 +233,11 @@ async def update_item(doctype_name:str, data: Item):
 
 
 
+# DELETE request to delete items
 @app.delete("/{doctype_name}/delete/{key}")
 async def delete_item(doctype_name: str, key: str):
     BizObject = ComServer.BizObjects.Find(f"{doctype_name}")
     lDocKey = BizObject.FindKeyByRef("DocNo", f"{key}")
-        
     if lDocKey is None:
         print ("Not Found...")
     else:
@@ -343,10 +252,7 @@ async def delete_item(doctype_name: str, key: str):
 
 
 
-######################################################################################
-
-
-
+# GET request to display details containing in the items
 @app.get("/{doctype_name}/getDetail/{element}")
 async def read_all_item_details(doctype_name: str, element: str):    
     BizObject = ComServer.BizObjects.Find(f"{doctype_name}")
@@ -354,22 +260,14 @@ async def read_all_item_details(doctype_name: str, element: str):
     lDetail = BizObject.DataSets.Find("cdsDocDetail") #lDetail contains detail data
     lknockoff = BizObject.DataSets.Find("cdsKnockOff")
     
-   #  lDocKey = BizObject.FindKeyByRef("CODE", "300-C0001")
     lDocKey = BizObject.FindKeyByRef("DocNo", f"{element}")
     aa = ""
     aaa = ""
     lst = []
         
-    # if lDocKey is None:
-    #     print("no record")
-    # else:
     BizObject.Params.Find("DocKey").Value = lDocKey
     BizObject.Open()
     BizObject.Edit()
-    # lMain.FindField("DESCRIPTION").value = "FAIRY TAIL WIZARD"
-    # print(lMain.FindField("DESCRIPTION").value)
-    # while not lDataSet.eof
-    # print(lDetail.Fields.Count)
    
     if lDetail:
         while not lDetail.eof:
