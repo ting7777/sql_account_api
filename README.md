@@ -14,8 +14,8 @@ pip install "uvicorn[standard]"
 ```
 
 ### Download sql_account_api.py file
-- [click here to download](sql_account_api.py)
-- <a href="/sql_account_api.py" download>Click to Download</a>
+- [click here to download](sql_account_api.py?raw=true)
+- <a href="/sql_account_api.py?raw=true" download>Click to Download</a>
 
 ### Open PowerShell and Navigate to the folder containing the downloaded file
 
