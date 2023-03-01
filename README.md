@@ -28,5 +28,7 @@ cd sql_account_api
 uvicorn sql_account_api:app --reload
 ```
 
-The following output should be displayed, indicating the port on which the API is currently running.
+<br/>
+
+**The following output should be displayed, indicating the port on which the API is currently running.**
 ![api](pic.png)
