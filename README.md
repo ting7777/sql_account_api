@@ -13,15 +13,19 @@ pip install fastapi
 pip install "uvicorn[standard]"
 ```
 
-### Download sql_account_api.py file
-- [click here to download](sql_account_api.py?raw=true)
-- <a href="/sql_account_api.py?raw=true" download>Click to Download</a>
+### Open PowerShell and run the following command line:
+```console 
+git clone https://github.com/Nb-Richard/sql_account_api
+```
 
-### Open PowerShell and Navigate to the folder containing the downloaded file
+### Navigate to the cloned folder
+```console 
+cd sql_account_api
+```
 
 ### Run the server with:
 ```console 
-uvicorn sqlapi:app --reload
+uvicorn sql_account_api:app --reload
 ```
 
 The following output should be displayed, indicating the port on which the API is currently running.
