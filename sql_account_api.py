@@ -15,7 +15,7 @@ def CheckLogin():
         ComServer.Logout()
     ComServer.Login("ADMIN", "ADMIN", #UserName, Password
                     "C:\eStream\SQLAccounting\Share\Default.DCF",  #DCF file
-                    "ACC-0002 (2).FDB") #Database Name
+                    "ACC-0001.FDB") #Database Name
 
 CheckLogin()
 
