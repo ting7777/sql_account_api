@@ -1,17 +1,27 @@
 ## Run SQL Account API
 
 ### Requirements
-- Python 3.7+
+- Python 3.13+
 
 ### Install FastAPI
 ```console 
-pip install fastapi
+py -m ensurepip --upgrade
+py -m pip install --upgrade pip
+py -m pip install fastapi
 ```
 
 ### Install Uvicorn server
 ```console 
-pip install "uvicorn[standard]"
+py -m pip install "uvicorn[standard]"
 ```
+
+### Install pywin32
+```console 
+py -m pip install pywin32
+```
+
+### Install Git for Windows
+https://git-scm.com/download/win
 
 ### Open PowerShell and run the following command line:
 ```console 
@@ -25,7 +35,7 @@ cd sql_account_api
 
 ### Run the server with:
 ```console 
-uvicorn sql_account_api:app --reload
+py -m uvicorn sql_account_api:app --reload
 ```
 
 <br/>
